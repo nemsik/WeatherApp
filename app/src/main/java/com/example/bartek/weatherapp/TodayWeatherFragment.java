@@ -24,9 +24,11 @@ import com.example.bartek.weatherapp.Database.CurrentWeatherModel;
 import com.example.bartek.weatherapp.Database.CurrentWeatherModelDao;
 import com.example.bartek.weatherapp.Database.Database;
 import com.example.bartek.weatherapp.Database.DatabaseRepo;
+import com.example.bartek.weatherapp.Database.FiveHoursWeather;
 import com.example.bartek.weatherapp.Model.WeatherResult;
 import com.example.bartek.weatherapp.Retrofit.IOpenWeatherMap;
 import com.example.bartek.weatherapp.Retrofit.RetrofitClient;
+import com.squareup.picasso.Picasso;
 
 import org.w3c.dom.Text;
 
@@ -49,16 +51,20 @@ public class TodayWeatherFragment extends Fragment implements Observer<CurrentWe
 
     @BindView(R.id.img_weather) ImageView img_weather;
     @BindView(R.id.textview_city_name) TextView textview_city_name;
-    @BindView(R.id.textview_humidity) TextView textview_humidity;
-    @BindView(R.id.textview_sunrise) TextView textview_sunrise;
-    @BindView(R.id.textview_sunset) TextView textview_sunset;
-    @BindView(R.id.textview_pressure) TextView textview_pressure;
     @BindView(R.id.textview_temperature) TextView textview_temperature;
+    @BindView(R.id.textview_temperature_max) TextView textview_temp_max;
+    @BindView(R.id.textview_temperature_min) TextView textview_temp_min;
     @BindView(R.id.textview_description) TextView textview_description;
-    @BindView(R.id.textview_date_time) TextView textview_date_time;
-    @BindView(R.id.textview_wind) TextView textview_wind;
-    @BindView(R.id.weather_panel) LinearLayout weather_panel;
-    @BindView(R.id.progrssbar) ProgressBar progressBar;
+
+    //@BindView(R.id.weather_panel) LinearLayout weather_panel;
+    @BindView(R.id.progressBar) ProgressBar progressBar;
+
+//    @BindView(R.id.textview_humidity) TextView textview_humidity;
+//    @BindView(R.id.textview_sunrise) TextView textview_sunrise;
+//    @BindView(R.id.textview_sunset) TextView textview_sunset;
+//    @BindView(R.id.textview_pressure) TextView textview_pressure;
+//@BindView(R.id.textview_date_time) TextView textview_date_time;
+//@BindView(R.id.textview_wind) TextView textview_wind;
 
     static TodayWeatherFragment instance;
     private ViewModel viewModel;
@@ -85,6 +91,12 @@ public class TodayWeatherFragment extends Fragment implements Observer<CurrentWe
         ButterKnife.bind(this, view);
         viewModel = ViewModelProviders.of(getActivity()).get(ViewModel.class);
         viewModel.getCurrentWeatherModelLiveData().observe(this, this);
+        viewModel.getFiveHoursWeatherLiveData().observe(this, new Observer<FiveHoursWeather>() {
+            @Override
+            public void onChanged(@Nullable FiveHoursWeather fiveHoursWeather) {
+                Log.d(TAG, "onChanged FIVE " + fiveHoursWeather.getId());
+            }
+        });
         return view;
     }
 
@@ -98,19 +110,42 @@ public class TodayWeatherFragment extends Fragment implements Observer<CurrentWe
 
     private void setWeatherInformation(CurrentWeatherModel data){
         try{
-            textview_city_name.setText(data.getCity_name());
-            textview_description.setText(data.getCity_name());
-            textview_temperature.setText(String.valueOf(data.getTemp()));
-            textview_date_time.setText(dateConv(data.getDt()));
-            textview_pressure.setText(String.valueOf(data.getPressure()));
-            textview_humidity.setText(String.valueOf(data.getHumidity()));
+            progressBar.setVisibility(View.VISIBLE);
+            textview_city_name.setVisibility(View.INVISIBLE);
+            textview_description.setVisibility(View.INVISIBLE);
+            textview_temperature.setVisibility(View.INVISIBLE);
+            textview_temp_max.setVisibility(View.INVISIBLE);
+            textview_temp_min.setVisibility(View.INVISIBLE);
+
+
+            textview_city_name.setText(data.getCity_name()+", "+data.getCountry());
+            textview_description.setText(data.getWeather_desc());
+            textview_temperature.setText(String.valueOf(data.getTemp() + "°C"));
+            textview_temp_max.setText("max: "+ String.valueOf(data.getMax_temp() + "°C"));
+            textview_temp_min.setText("min: "+String.valueOf(data.getMin_temp() + "°C"));
+
+            String path = "https://openweathermap.org/img/w/" + data.getWeather_icon().toString() + ".png";
+            Picasso.get().load(path).into(img_weather);
+
+
+            textview_city_name.setVisibility(View.VISIBLE);
+            textview_description.setVisibility(View.VISIBLE);
+            textview_temperature.setVisibility(View.VISIBLE);
+            textview_temp_max.setVisibility(View.VISIBLE);
+            textview_temp_min.setVisibility(View.VISIBLE);
             progressBar.setVisibility(View.INVISIBLE);
         }catch (Exception e){}
     }
 
     @Override
     public void onChanged(@Nullable CurrentWeatherModel currentWeatherModel) {
-        Log.d(TAG, "onChanged: observer" + currentWeatherModel.getCity_name());
-        setWeatherInformation(currentWeatherModel);
+        if(currentWeatherModel != null) {
+            Log.d(TAG, "onChanged: observer" + currentWeatherModel.getCity_name());
+            Log.d(TAG, "onChanged: observer" + currentWeatherModel.getMax_temp());
+            Log.d(TAG, "onChanged: observer" + currentWeatherModel.getMin_temp());
+            setWeatherInformation(currentWeatherModel);
+        }
     }
+
+
 }

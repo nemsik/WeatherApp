@@ -5,7 +5,7 @@ import android.app.Application;
 import android.arch.persistence.room.Room;
 import android.arch.persistence.room.RoomDatabase;
 
-@android.arch.persistence.room.Database(entities = CurrentWeatherModel.class, version = 5)
+@android.arch.persistence.room.Database(entities = {CurrentWeatherModel.class, FiveHoursWeather.class, SingleWeather.class}, version = 3)
 public abstract class Database extends RoomDatabase {
 
     private static Database INSTANCE;
@@ -21,5 +21,7 @@ public abstract class Database extends RoomDatabase {
         INSTANCE = null;
     }
     public abstract CurrentWeatherModelDao currentWeatherModelDao();
+    public abstract SingleWeatherDao singleWeatherDao();
+    public abstract FiveHoursWeatherDao fiveHoursWeatherDao();
 }
 

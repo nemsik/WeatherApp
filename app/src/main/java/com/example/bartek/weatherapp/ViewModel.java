@@ -8,6 +8,7 @@ import android.util.Log;
 
 import com.example.bartek.weatherapp.Database.CurrentWeatherModel;
 import com.example.bartek.weatherapp.Database.DatabaseRepo;
+import com.example.bartek.weatherapp.Database.FiveHoursWeather;
 import com.example.bartek.weatherapp.Model.WeatherResult;
 import com.example.bartek.weatherapp.Retrofit.IOpenWeatherMap;
 import com.example.bartek.weatherapp.Retrofit.RetrofitClient;
@@ -24,6 +25,7 @@ public class ViewModel extends AndroidViewModel {
 
     private LiveData<CurrentWeatherModel> currentWeatherModelLiveData;
     private LiveData<List<CurrentWeatherModel>> listLiveData;
+    private LiveData<FiveHoursWeather> fiveHoursWeatherLiveData;
     private DatabaseRepo repo;
 
     public ViewModel(Application application){
@@ -31,6 +33,7 @@ public class ViewModel extends AndroidViewModel {
         repo = DatabaseRepo.getInstance(application);
         currentWeatherModelLiveData = repo.getCurrentWeatherModel();
         listLiveData = repo.getListLiveData();
+        fiveHoursWeatherLiveData = repo.getFiveHoursWeatherLiveData();
     }
 
     public LiveData<CurrentWeatherModel> getCurrentWeatherModelLiveData() {
@@ -39,6 +42,10 @@ public class ViewModel extends AndroidViewModel {
 
     public LiveData<List<CurrentWeatherModel>> getAll(){
         return listLiveData;
+    }
+
+    public LiveData<FiveHoursWeather> getFiveHoursWeatherLiveData() {
+        return fiveHoursWeatherLiveData;
     }
 
     public void insert(WeatherResult weatherResult){

@@ -11,6 +11,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
@@ -38,6 +39,8 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
@@ -61,21 +64,18 @@ public class MainActivity extends AppCompatActivity {
     private TabLayout tabLayout;
     private ViewPager viewPager;
     private CoordinatorLayout coordinatorLayout;
-    private ViewModel viewModel;
-    private IOpenWeatherMap iOpenWeatherMap;
-    public static DatabaseRepo databaseRepo;
 
+    private FusedLocationProviderClient fusedLocationProviderClient;
+    private LocationCallback locationCallback;
+    private Location location;
+    private LocationRequest locationRequest;
+    private DatabaseRepo databaseRepo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Retrofit retrofit = RetrofitClient.getInstance();
-        iOpenWeatherMap = retrofit.create(IOpenWeatherMap.class);
-        databaseRepo = DatabaseRepo.getInstance(getApplication());
-
-
-        viewModel = ViewModelProviders.of(this).get(ViewModel.class);
 
         coordinatorLayout = (CoordinatorLayout) findViewById(R.id.root_view);
 
@@ -83,6 +83,16 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        databaseRepo = DatabaseRepo.getInstance(getApplication());
+
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+                onNewLocation(locationResult.getLastLocation());
+            }
+        };
 
         Dexter.withActivity(this).withPermissions(Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.ACCESS_FINE_LOCATION).withListener(new MultiplePermissionsListener() {
@@ -93,23 +103,21 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
                 startLocationService();
+                createLocationRequest();
+                getLastLocation();
+                requestLocationUpdates();
+                setupViewPager(viewPager);
             }
 
             @Override
             public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {
                 Snackbar.make(coordinatorLayout, "Permission Denied", Snackbar.LENGTH_LONG).show();
+                if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                        && ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    return;
+                }
             }
         }).check();
-
-        setupViewPager(viewPager);
-        
-        ViewModel viewModel = ViewModelProviders.of(this).get(ViewModel.class);
-        viewModel.getAll().observe(this, new Observer<List<CurrentWeatherModel>>() {
-            @Override
-            public void onChanged(@Nullable List<CurrentWeatherModel> currentWeatherModels) {
-                Log.d(TAG, "onChanged: " + currentWeatherModels.get(currentWeatherModels.size()-1).getCity_name());
-            }
-        });
 
     }
 
@@ -125,4 +133,44 @@ public class MainActivity extends AppCompatActivity {
     private void startLocationService(){
         startService(new Intent(this, LocationService.class));
     }
+
+    private void createLocationRequest() {
+        locationRequest = new LocationRequest();
+        locationRequest.setInterval(1000 * 30);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    }
+
+    private void getLastLocation() {
+        try {
+            fusedLocationProviderClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
+                @Override
+                public void onComplete(@NonNull Task<Location> task) {
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        location = task.getResult();
+                        Log.d(TAG, "onComplete: " + location.toString());
+                    } else Log.i(TAG, "Failed to get location");
+                }
+            });
+        } catch (SecurityException securityException) {
+            Log.i(TAG, "Lost location permission " + securityException);
+        }
+    }
+
+    private void requestLocationUpdates() {
+        Log.d(TAG, "request location updates");
+        try {
+            fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
+        } catch (SecurityException securityException) {
+            Log.i(TAG, "Lost location permission. Could not request updates. " + securityException);
+        }
+    }
+
+    private void onNewLocation(Location location) {
+        Log.d(TAG, "NewLocation: " + location);
+        //updateRoom(location);
+        databaseRepo.insertFromLocation(location);
+        databaseRepo.insert5days(location);
+    }
+
+
 }

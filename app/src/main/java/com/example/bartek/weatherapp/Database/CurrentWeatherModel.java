@@ -10,9 +10,6 @@ public class CurrentWeatherModel {
 
     @PrimaryKey(autoGenerate = true)
     public int id;
-    private double lon;
-    private double lat;
-    private String weather_main;
     private String weather_desc;
     private String weather_icon;
     private double temp;
@@ -30,11 +27,8 @@ public class CurrentWeatherModel {
     private String country;
     private String city_name;
 
-    public CurrentWeatherModel(double lon, double lat, String weather_main, String weather_desc, String weather_icon, double temp, double min_temp, double max_temp, float pressure, int humidity, int visibility, double wind_speed, double wind_deg, int clouds, long dt, int sunrise, int sunset, String country, String city_name) {
+    public CurrentWeatherModel(String weather_desc, String weather_icon, double temp, double min_temp, double max_temp, float pressure, int humidity, int visibility, double wind_speed, double wind_deg, int clouds, long dt, int sunrise, int sunset, String country, String city_name) {
         this.id = id;
-        this.lon = lon;
-        this.lat = lat;
-        this.weather_main = weather_main;
         this.weather_desc = weather_desc;
         this.weather_icon = weather_icon;
         this.temp = temp;
@@ -61,29 +55,6 @@ public class CurrentWeatherModel {
         this.id = id;
     }
 
-    public double getLon() {
-        return lon;
-    }
-
-    public void setLon(double lon) {
-        this.lon = lon;
-    }
-
-    public double getLat() {
-        return lat;
-    }
-
-    public void setLat(double lat) {
-        this.lat = lat;
-    }
-
-    public String getWeather_main() {
-        return weather_main;
-    }
-
-    public void setWeather_main(String weather_main) {
-        this.weather_main = weather_main;
-    }
 
     public String getWeather_desc() {
         return weather_desc;

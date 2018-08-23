@@ -1,6 +1,8 @@
 package com.example.bartek.weatherapp.Internet;
 
 import android.app.Service;
+import android.arch.lifecycle.LifecycleService;
+import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProvider;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
@@ -42,15 +44,19 @@ public class LocationService extends Service {
     private LocationCallback locationCallback;
     private Location location;
     private LocationRequest locationRequest;
-    private IOpenWeatherMap iOpenWeatherMap;
     private DatabaseRepo databaseRepo;
+//    private IOpenWeatherMap iOpenWeatherMap;
+//    private Retrofit retrofit;
+//    private ViewModel viewModel;
 
     public LocationService( ) {
     }
 
     @Override
     public void onCreate() {
+        super.onCreate();
         Log.d(TAG, "onCreate: ");
+
         databaseRepo = DatabaseRepo.getInstance(getApplication());
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         locationCallback = new LocationCallback() {
@@ -60,24 +66,25 @@ public class LocationService extends Service {
                 onNewLocation(locationResult.getLastLocation());
             }
         };
-
-        Retrofit retrofit = RetrofitClient.getInstance();
-        iOpenWeatherMap = retrofit.create(IOpenWeatherMap.class);
-
         createLocationRequest();
         getLastLocation();
         requestLocationUpdates();
+
+//        retrofit = RetrofitClient.getInstance();
+//        iOpenWeatherMap = retrofit.create(IOpenWeatherMap.class);
+
     }
 
     private void onNewLocation(Location location) {
         Log.d(TAG, "NewLocation: " + location);
-        updateRoom(location);
+        //updateRoom(location);
+        databaseRepo.insertFromLocation(location);
     }
 
     private void createLocationRequest() {
         locationRequest = new LocationRequest();
-        locationRequest.setInterval(1000 * 30);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(1000 * 60);
+        locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
     }
 
     private void getLastLocation() {
@@ -106,30 +113,9 @@ public class LocationService extends Service {
         }
     }
 
-    private void updateRoom(Location location) {
-        try {
-            Log.d(TAG, "loadData: ");
-            iOpenWeatherMap.getWeatherByLatLng(String.valueOf(location.getLatitude()),
-                    String.valueOf(location.getLongitude())
-                    , MainActivity.api_key, "metric").enqueue(new Callback<WeatherResult>() {
-                @Override
-                public void onResponse(Call<WeatherResult> call, Response<WeatherResult> response) {
-                    Log.d(TAG, "onResponse: " + response.body().getName());
-                    databaseRepo.insert(response.body());
-                }
-
-                @Override
-                public void onFailure(Call<WeatherResult> call, Throwable t) {
-                    Log.e(TAG, "onFailure: " + t.toString());
-                }
-            });
-        } catch (Exception e) {
-            Log.e(TAG, "loadData: Error " + e.toString());
-        }
-    }
-
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
         return START_STICKY;
     }
 
@@ -138,5 +124,27 @@ public class LocationService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
+
+//    private void updateRoom(Location location) {
+//        try {
+//            Log.d(TAG, "loadData: ");
+//            iOpenWeatherMap.getWeatherByLatLng(String.valueOf(location.getLatitude()),
+//                    String.valueOf(location.getLongitude())
+//                    , MainActivity.api_key, "metric").enqueue(new Callback<WeatherResult>() {
+//                @Override
+//                public void onResponse(Call<WeatherResult> call, Response<WeatherResult> response) {
+//                    Log.d(TAG, "onResponse: " + response.body().getName());
+//                    databaseRepo.insert(response.body());
+//                }
+//
+//                @Override
+//                public void onFailure(Call<WeatherResult> call, Throwable t) {
+//                    Log.e(TAG, "onFailure: " + t.toString());
+//                }
+//            });
+//        } catch (Exception e) {
+//            Log.e(TAG, "loadData: Error " + e.toString());
+//        }
+//    }
 
 }
