@@ -1,13 +1,8 @@
 package com.example.bartek.weatherapp;
 
 
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -16,38 +11,27 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.example.bartek.weatherapp.Database.CurrentWeatherModel;
-import com.example.bartek.weatherapp.Database.CurrentWeatherModelDao;
-import com.example.bartek.weatherapp.Database.Database;
-import com.example.bartek.weatherapp.Database.DatabaseRepo;
-import com.example.bartek.weatherapp.Database.FiveHoursWeather;
-import com.example.bartek.weatherapp.Model.WeatherResult;
-import com.example.bartek.weatherapp.Retrofit.IOpenWeatherMap;
-import com.example.bartek.weatherapp.Retrofit.RetrofitClient;
+
+import com.example.bartek.weatherapp.Database.Model.CityHoursWeather;
+import com.example.bartek.weatherapp.Database.Model.CurrentWeather;
+import com.example.bartek.weatherapp.Database.Model.SingleWeather;
 import com.squareup.picasso.Picasso;
 
-import org.w3c.dom.Text;
-
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
 
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class TodayWeatherFragment extends Fragment implements Observer<CurrentWeatherModel> {
+public class TodayWeatherFragment extends Fragment implements Observer<CurrentWeather> {
 
     @BindView(R.id.img_weather) ImageView img_weather;
     @BindView(R.id.textview_city_name) TextView textview_city_name;
@@ -90,11 +74,23 @@ public class TodayWeatherFragment extends Fragment implements Observer<CurrentWe
         View view = inflater.inflate(R.layout.fragment_today_weather, container, false);
         ButterKnife.bind(this, view);
         viewModel = ViewModelProviders.of(getActivity()).get(ViewModel.class);
-        viewModel.getCurrentWeatherModelLiveData().observe(this, this);
-        viewModel.getFiveHoursWeatherLiveData().observe(this, new Observer<FiveHoursWeather>() {
+        viewModel.getCurrentWeatherLiveData().observe(this, this);
+        viewModel.getSingleWeatherLiveData().observe(this, new Observer<List<SingleWeather>>() {
             @Override
-            public void onChanged(@Nullable FiveHoursWeather fiveHoursWeather) {
-                Log.d(TAG, "onChanged FIVE " + fiveHoursWeather.getId());
+            public void onChanged(@Nullable List<SingleWeather> singleWeathers) {
+                if(singleWeathers != null){
+                    Log.d(TAG, "onChanged: SINGLE");
+                    for(int i=0; i<singleWeathers.size()-1; i++){
+                        Log.e(TAG, "SINGLE TEMP "+singleWeathers.get(i).getTemp());
+                    }
+                }
+            }
+        });
+
+        viewModel.getCityHoursWeatherLiveData().observe(this, new Observer<CityHoursWeather>() {
+            @Override
+            public void onChanged(@Nullable CityHoursWeather cityHoursWeather) {
+                if(cityHoursWeather != null) Log.e(TAG, "FRAGMENT " +cityHoursWeather.getId());
             }
         });
         return view;
@@ -108,7 +104,7 @@ public class TodayWeatherFragment extends Fragment implements Observer<CurrentWe
         return formatted;
     }
 
-    private void setWeatherInformation(CurrentWeatherModel data){
+    private void setWeatherInformation(CurrentWeather data){
         try{
             progressBar.setVisibility(View.VISIBLE);
             textview_city_name.setVisibility(View.INVISIBLE);
@@ -138,12 +134,13 @@ public class TodayWeatherFragment extends Fragment implements Observer<CurrentWe
     }
 
     @Override
-    public void onChanged(@Nullable CurrentWeatherModel currentWeatherModel) {
-        if(currentWeatherModel != null) {
-            Log.d(TAG, "onChanged: observer" + currentWeatherModel.getCity_name());
-            Log.d(TAG, "onChanged: observer" + currentWeatherModel.getMax_temp());
-            Log.d(TAG, "onChanged: observer" + currentWeatherModel.getMin_temp());
-            setWeatherInformation(currentWeatherModel);
+    public void onChanged(@Nullable CurrentWeather currentWeather) {
+        if(currentWeather != null) {
+//            Log.d(TAG, "onChanged: observer" + currentWeatherModel.getCity_name());
+//            Log.d(TAG, "onChanged: observer" + currentWeatherModel.getMax_temp());
+//            Log.d(TAG, "onChanged: observer" + currentWeatherModel.getMin_temp());
+            Log.e(TAG, "CURRENT ID" + currentWeather.getId());
+            setWeatherInformation(currentWeather);
         }
     }
 

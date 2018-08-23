@@ -5,7 +5,14 @@ import android.app.Application;
 import android.arch.persistence.room.Room;
 import android.arch.persistence.room.RoomDatabase;
 
-@android.arch.persistence.room.Database(entities = {CurrentWeatherModel.class, FiveHoursWeather.class, SingleWeather.class}, version = 3)
+import com.example.bartek.weatherapp.Database.Dao.CityHoursWeatherDao;
+import com.example.bartek.weatherapp.Database.Dao.CurrentWeatherDao;
+import com.example.bartek.weatherapp.Database.Dao.SingleWeatherDao;
+import com.example.bartek.weatherapp.Database.Model.CityHoursWeather;
+import com.example.bartek.weatherapp.Database.Model.CurrentWeather;
+import com.example.bartek.weatherapp.Database.Model.SingleWeather;
+
+@android.arch.persistence.room.Database(entities = {CurrentWeather.class, CityHoursWeather.class, SingleWeather.class}, version = 10)
 public abstract class Database extends RoomDatabase {
 
     private static Database INSTANCE;
@@ -20,8 +27,9 @@ public abstract class Database extends RoomDatabase {
     public static void destroyInstances(){
         INSTANCE = null;
     }
-    public abstract CurrentWeatherModelDao currentWeatherModelDao();
+
+    public abstract CurrentWeatherDao currentWeatherDao();
+    public abstract CityHoursWeatherDao cityHoursWeatherDao();
     public abstract SingleWeatherDao singleWeatherDao();
-    public abstract FiveHoursWeatherDao fiveHoursWeatherDao();
 }
 

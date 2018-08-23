@@ -5,6 +5,16 @@ import android.arch.lifecycle.LiveData;
 import android.location.Location;
 import android.util.Log;
 
+
+import com.example.bartek.weatherapp.Database.AsyncTask.InsertCityAsyncTask;
+import com.example.bartek.weatherapp.Database.AsyncTask.InsertCurrentAsynctask;
+import com.example.bartek.weatherapp.Database.AsyncTask.InsertSingeAsyncTask;
+import com.example.bartek.weatherapp.Database.Dao.CityHoursWeatherDao;
+import com.example.bartek.weatherapp.Database.Dao.CurrentWeatherDao;
+import com.example.bartek.weatherapp.Database.Dao.SingleWeatherDao;
+import com.example.bartek.weatherapp.Database.Model.CityHoursWeather;
+import com.example.bartek.weatherapp.Database.Model.CurrentWeather;
+import com.example.bartek.weatherapp.Database.Model.SingleWeather;
 import com.example.bartek.weatherapp.MainActivity;
 import com.example.bartek.weatherapp.Model.WeatherResult;
 import com.example.bartek.weatherapp.Model.Weatherresult5Days;
@@ -21,47 +31,52 @@ import retrofit2.Retrofit;
 public class DatabaseRepo {
     private String TAG = "DatabaseRepo";
 
-    private CurrentWeatherModelDao dao;
-    private FiveHoursWeatherDao daofive;
-    private LiveData<CurrentWeatherModel> currentWeatherModel;
-    private LiveData<List<CurrentWeatherModel>> listLiveData;
-    private LiveData<FiveHoursWeather> fiveHoursWeatherLiveData;
+    private CurrentWeatherDao currentWeatherDao;
+    private CityHoursWeatherDao cityHoursWeatherDao;
+    private SingleWeatherDao singleWeatherDao;
+    private LiveData<CurrentWeather> currentWeatherLiveData;
+    private LiveData<CityHoursWeather> cityHoursWeatherLiveData;
+    private LiveData<List<SingleWeather>> singleWeatherLiveData;
     private static DatabaseRepo instance = null;
     private Retrofit retrofit;
     private IOpenWeatherMap iOpenWeatherMap;
 
-    public static DatabaseRepo getInstance(Application application){
-        if(instance == null){
+    public static DatabaseRepo getInstance(Application application) {
+        if (instance == null) {
             instance = new DatabaseRepo(application);
         }
-        Log.i("REPO", "getInstance: " + instance);
         return instance;
     }
 
     public DatabaseRepo(Application application) {
         retrofit = RetrofitClient.getInstance();
         iOpenWeatherMap = retrofit.create(IOpenWeatherMap.class);
+
         Database db = Database.getDatabase(application);
-        dao = db.currentWeatherModelDao();
-        daofive = db.fiveHoursWeatherDao();
-        currentWeatherModel = dao.getCurrent();
-        fiveHoursWeatherLiveData = daofive.getAllFive();
-        listLiveData = dao.getAll();
+
+        currentWeatherDao = db.currentWeatherDao();
+        cityHoursWeatherDao = db.cityHoursWeatherDao();
+        singleWeatherDao = db.singleWeatherDao();
+
+        currentWeatherLiveData = currentWeatherDao.getCurrent();
+        cityHoursWeatherLiveData = cityHoursWeatherDao.getCurrent();
+        singleWeatherLiveData = singleWeatherDao.getAllSingleWeather(0);
+
     }
 
-    public LiveData<CurrentWeatherModel> getCurrentWeatherModel() {
-        return currentWeatherModel;
+    public LiveData<CurrentWeather> getCurrentWeatherLiveData() {
+        return currentWeatherLiveData;
     }
 
-    public LiveData<List<CurrentWeatherModel>> getListLiveData() {
-        return listLiveData;
+    public LiveData<CityHoursWeather> getCityHoursWeatherLiveData() {
+        return cityHoursWeatherLiveData;
     }
 
-    public LiveData<FiveHoursWeather> getFiveHoursWeatherLiveData() {
-        return fiveHoursWeatherLiveData;
+    public LiveData<List<SingleWeather>> getSingleWeatherLiveData() {
+        return singleWeatherLiveData;
     }
 
-    public void insertFromLocation(Location location){
+    public void insertFromLocation(Location location) {
         try {
             Log.d(TAG, "loadData: ");
             iOpenWeatherMap.getWeatherByLatLng(String.valueOf(location.getLatitude()),
@@ -83,7 +98,7 @@ public class DatabaseRepo {
         }
     }
 
-    public void insert5days(Location location){
+    public void insert5days(Location location) {
         try {
             Log.d(TAG, "loadData: 5 days ");
             iOpenWeatherMap.get5DaysWeatherByLatLng(String.valueOf(location.getLatitude()),
@@ -92,9 +107,6 @@ public class DatabaseRepo {
                 @Override
                 public void onResponse(Call<Weatherresult5Days> call, Response<Weatherresult5Days> response) {
                     Log.d(TAG, "onResponse: " + response.body().getCity().getName());
-                    Log.d(TAG, "onResponse: " + response.body().getList().get(1).getMain().getTemp());
-                    Log.d(TAG, "onResponse: " + response.body().getList().get(1).getDt_txt());
-
                     insert5(response.body());
                 }
 
@@ -108,16 +120,29 @@ public class DatabaseRepo {
         }
     }
 
-    private void insert5(Weatherresult5Days weatherresult5Days){
-        FiveHoursWeather fiveHoursWeather = new FiveHoursWeather(weatherresult5Days.getCity().getName()
-                ,weatherresult5Days.getCity().getName());
-        new Insert5AsyncTask(daofive).execute(fiveHoursWeather);
+    private void insert5(Weatherresult5Days weatherresult5Days) {
+        CityHoursWeather fiveHoursWeather = new CityHoursWeather(0, weatherresult5Days.getCity().getName()
+                , weatherresult5Days.getCity().getName());
+        new InsertCityAsyncTask(cityHoursWeatherDao).execute(fiveHoursWeather);
+        insertSingle(weatherresult5Days);
+        Log.d(TAG, "insert5: to singe");
+    }
+
+    private void insertSingle(Weatherresult5Days weatherresult5Days) {
+        SingleWeather singleWeather;
+        Log.d(TAG, "insertSingle: from single");
+        for (int i = 0; i <= 5; i++) {
+            singleWeather = new SingleWeather(0, weatherresult5Days.getList().get(i).getMain().getTemp());
+            Log.e(TAG, "insertSingle: " + weatherresult5Days.getList().get(i).getMain().getTemp());
+            new InsertSingeAsyncTask(singleWeatherDao).execute(singleWeather);
+        }
     }
 
 
-    public void insert (WeatherResult weatherResult){
+    public void insert(WeatherResult weatherResult) {
         try {
-            CurrentWeatherModel currentWeatherModel = new CurrentWeatherModel(
+            CurrentWeather currentWeather = new CurrentWeather(
+                    0,
                     weatherResult.getWeather().get(0).getDescription(),
                     weatherResult.getWeather().get(0).getIcon(),
                     weatherResult.getMain().getTemp(),
@@ -134,8 +159,8 @@ public class DatabaseRepo {
                     weatherResult.getSys().getSunset(),
                     weatherResult.getSys().getCountry(),
                     weatherResult.getName());
-            new InsertAsynctask(dao).execute(currentWeatherModel);
-        } catch (Exception e){
+            new InsertCurrentAsynctask(currentWeatherDao).execute(currentWeather);
+        } catch (Exception e) {
             Log.i(TAG, "insert err" + e.toString());
         }
     }

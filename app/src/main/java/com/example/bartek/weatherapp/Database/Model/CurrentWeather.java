@@ -1,4 +1,4 @@
-package com.example.bartek.weatherapp.Database;
+package com.example.bartek.weatherapp.Database.Model;
 
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
@@ -6,9 +6,9 @@ import android.arch.persistence.room.PrimaryKey;
 import com.example.bartek.weatherapp.Model.WeatherResult;
 
 @Entity
-public class CurrentWeatherModel {
+public class CurrentWeather {
 
-    @PrimaryKey(autoGenerate = true)
+    @PrimaryKey(autoGenerate = false)
     public int id;
     private String weather_desc;
     private String weather_icon;
@@ -27,7 +27,7 @@ public class CurrentWeatherModel {
     private String country;
     private String city_name;
 
-    public CurrentWeatherModel(String weather_desc, String weather_icon, double temp, double min_temp, double max_temp, float pressure, int humidity, int visibility, double wind_speed, double wind_deg, int clouds, long dt, int sunrise, int sunset, String country, String city_name) {
+    public CurrentWeather(int id, String weather_desc, String weather_icon, double temp, double min_temp, double max_temp, float pressure, int humidity, int visibility, double wind_speed, double wind_deg, int clouds, long dt, int sunrise, int sunset, String country, String city_name) {
         this.id = id;
         this.weather_desc = weather_desc;
         this.weather_icon = weather_icon;

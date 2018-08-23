@@ -13,7 +13,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.example.bartek.weatherapp.Database.CurrentWeatherModel;
+
 import com.example.bartek.weatherapp.Database.Database;
 import com.example.bartek.weatherapp.Database.DatabaseRepo;
 import com.example.bartek.weatherapp.MainActivity;
@@ -78,7 +78,7 @@ public class LocationService extends Service {
     private void onNewLocation(Location location) {
         Log.d(TAG, "NewLocation: " + location);
         //updateRoom(location);
-        databaseRepo.insertFromLocation(location);
+        //databaseRepo.insertFromLocation(location);
     }
 
     private void createLocationRequest() {

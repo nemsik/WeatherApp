@@ -3,49 +3,42 @@ package com.example.bartek.weatherapp;
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.MutableLiveData;
-import android.util.Log;
 
-import com.example.bartek.weatherapp.Database.CurrentWeatherModel;
 import com.example.bartek.weatherapp.Database.DatabaseRepo;
-import com.example.bartek.weatherapp.Database.FiveHoursWeather;
+import com.example.bartek.weatherapp.Database.Model.CityHoursWeather;
+import com.example.bartek.weatherapp.Database.Model.CurrentWeather;
+import com.example.bartek.weatherapp.Database.Model.SingleWeather;
 import com.example.bartek.weatherapp.Model.WeatherResult;
-import com.example.bartek.weatherapp.Retrofit.IOpenWeatherMap;
-import com.example.bartek.weatherapp.Retrofit.RetrofitClient;
 
 import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
 
 public class ViewModel extends AndroidViewModel {
     private final String TAG = "ViewModel";
 
-    private LiveData<CurrentWeatherModel> currentWeatherModelLiveData;
-    private LiveData<List<CurrentWeatherModel>> listLiveData;
-    private LiveData<FiveHoursWeather> fiveHoursWeatherLiveData;
+    private LiveData<CurrentWeather> currentWeatherLiveData;
+    private LiveData<CityHoursWeather> cityHoursWeatherLiveData;
+    private LiveData<List<SingleWeather>> singleWeatherLiveData;
     private DatabaseRepo repo;
 
     public ViewModel(Application application){
         super(application);
         repo = DatabaseRepo.getInstance(application);
-        currentWeatherModelLiveData = repo.getCurrentWeatherModel();
-        listLiveData = repo.getListLiveData();
-        fiveHoursWeatherLiveData = repo.getFiveHoursWeatherLiveData();
+
+        currentWeatherLiveData = repo.getCurrentWeatherLiveData();
+        cityHoursWeatherLiveData = repo.getCityHoursWeatherLiveData();
+        singleWeatherLiveData = repo.getSingleWeatherLiveData();
     }
 
-    public LiveData<CurrentWeatherModel> getCurrentWeatherModelLiveData() {
-        return currentWeatherModelLiveData;
+    public LiveData<CurrentWeather> getCurrentWeatherLiveData() {
+        return currentWeatherLiveData;
     }
 
-    public LiveData<List<CurrentWeatherModel>> getAll(){
-        return listLiveData;
+    public LiveData<CityHoursWeather> getCityHoursWeatherLiveData() {
+        return cityHoursWeatherLiveData;
     }
 
-    public LiveData<FiveHoursWeather> getFiveHoursWeatherLiveData() {
-        return fiveHoursWeatherLiveData;
+    public LiveData<List<SingleWeather>> getSingleWeatherLiveData() {
+        return singleWeatherLiveData;
     }
 
     public void insert(WeatherResult weatherResult){

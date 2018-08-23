@@ -1,17 +1,18 @@
-package com.example.bartek.weatherapp.Database;
+package com.example.bartek.weatherapp.Database.Model;
 
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
 
-@Entity(tableName = "fiveWeather")
-public class FiveHoursWeather {
-    @PrimaryKey(autoGenerate = true)
+@Entity(tableName = "cityHoursWeather")
+public class CityHoursWeather {
+    @PrimaryKey(autoGenerate = false)
     private int id;
 
     private String city_name;
     private String country_name;
 
-    public FiveHoursWeather(String city_name, String country_name) {
+    public CityHoursWeather(int id, String city_name, String country_name) {
+        this.id = id;
         this.city_name = city_name;
         this.country_name = country_name;
     }

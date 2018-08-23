@@ -1,18 +1,11 @@
 package com.example.bartek.weatherapp;
 
 import android.Manifest;
-import android.arch.lifecycle.Observer;
-import android.arch.lifecycle.ViewModelProvider;
-import android.arch.lifecycle.ViewModelProviders;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Looper;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
@@ -25,14 +18,8 @@ import android.util.Log;
 
 
 import com.example.bartek.weatherapp.Adapter.ViewPageAdapter;
-import com.example.bartek.weatherapp.Database.CurrentWeatherModel;
-import com.example.bartek.weatherapp.Database.CurrentWeatherModelDao;
-import com.example.bartek.weatherapp.Database.Database;
 import com.example.bartek.weatherapp.Database.DatabaseRepo;
-import com.example.bartek.weatherapp.Internet.InternetReceiver;
 import com.example.bartek.weatherapp.Internet.LocationService;
-import com.example.bartek.weatherapp.Model.WeatherResult;
-import com.example.bartek.weatherapp.Retrofit.IOpenWeatherMap;
 import com.example.bartek.weatherapp.Retrofit.RetrofitClient;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -49,9 +36,6 @@ import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 
 import java.util.List;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 import retrofit2.Retrofit;
 
 public class MainActivity extends AppCompatActivity {
