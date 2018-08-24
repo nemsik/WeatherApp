@@ -131,9 +131,10 @@ public class DatabaseRepo {
     private void insertSingle(Weatherresult5Days weatherresult5Days) {
         SingleWeather singleWeather;
         Log.d(TAG, "insertSingle: from single");
-        for (int i = 0; i <= 5; i++) {
-            singleWeather = new SingleWeather(0, weatherresult5Days.getList().get(i).getMain().getTemp());
-            Log.e(TAG, "insertSingle: " + weatherresult5Days.getList().get(i).getMain().getTemp());
+        for (int i = 0; i <= 9; i++) {
+            Log.e(TAG, "insertSingle: !!!! " +i);
+            singleWeather = new SingleWeather(0, weatherresult5Days.getList().get(i).getMain().getTemp(),
+                    weatherresult5Days.getList().get(i).getDt());
             new InsertSingeAsyncTask(singleWeatherDao).execute(singleWeather);
         }
     }

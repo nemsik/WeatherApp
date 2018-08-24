@@ -22,10 +22,12 @@ public class SingleWeather {
     @ColumnInfo
     private int fiveId;
     private double temp;
+    private long dt;
 
-    public SingleWeather(int fiveId, double temp) {
+    public SingleWeather(int fiveId, double temp, long dt) {
         this.fiveId = fiveId;
         this.temp = temp;
+        this.dt = dt;
     }
 
     public double getTemp() {
@@ -50,6 +52,14 @@ public class SingleWeather {
 
     public void setFiveId(int fiveId) {
         this.fiveId = fiveId;
+    }
+
+    public long getDt() {
+        return dt;
+    }
+
+    public void setDt(long dt) {
+        this.dt = dt;
     }
 }
 
