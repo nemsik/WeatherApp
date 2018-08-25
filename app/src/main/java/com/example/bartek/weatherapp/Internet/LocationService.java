@@ -1,11 +1,10 @@
 package com.example.bartek.weatherapp.Internet;
 
 import android.app.Service;
-import android.arch.lifecycle.LifecycleService;
-import android.arch.lifecycle.Observer;
-import android.arch.lifecycle.ViewModelProvider;
-import android.arch.lifecycle.ViewModelProviders;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.location.Location;
 import android.os.IBinder;
 import android.os.Looper;
@@ -13,14 +12,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-
-import com.example.bartek.weatherapp.Database.Database;
 import com.example.bartek.weatherapp.Database.DatabaseRepo;
-import com.example.bartek.weatherapp.MainActivity;
-import com.example.bartek.weatherapp.Model.WeatherResult;
-import com.example.bartek.weatherapp.Retrofit.IOpenWeatherMap;
-import com.example.bartek.weatherapp.Retrofit.RetrofitClient;
-import com.example.bartek.weatherapp.ViewModel;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -28,13 +20,6 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-
-import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
 
 public class LocationService extends Service {
 
@@ -45,9 +30,6 @@ public class LocationService extends Service {
     private Location location;
     private LocationRequest locationRequest;
     private DatabaseRepo databaseRepo;
-//    private IOpenWeatherMap iOpenWeatherMap;
-//    private Retrofit retrofit;
-//    private ViewModel viewModel;
 
     public LocationService( ) {
     }
@@ -70,21 +52,42 @@ public class LocationService extends Service {
         getLastLocation();
         requestLocationUpdates();
 
-//        retrofit = RetrofitClient.getInstance();
-//        iOpenWeatherMap = retrofit.create(IOpenWeatherMap.class);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(InternetReceiver.intentAction);
+
+        BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Log.e(TAG, "onReceive: " + intent.getBooleanExtra(InternetReceiver.intentAction, false));
+                boolean bool = intent.getBooleanExtra(InternetReceiver.intentAction, false);
+                if (!bool){
+                    try{
+                        final Task<Void> voidTask = fusedLocationProviderClient.removeLocationUpdates(locationCallback);
+                    }catch (SecurityException exp) {
+                        Log.e(TAG, " Security exception while removeLocationUpdates");
+                    }
+                }else {
+                    createLocationRequest();
+                    getLastLocation();
+                    requestLocationUpdates();
+                }
+            }
+        };
+
+        registerReceiver(broadcastReceiver,filter);
 
     }
 
     private void onNewLocation(Location location) {
         Log.d(TAG, "NewLocation: " + location);
-        //updateRoom(location);
-        //databaseRepo.insertFromLocation(location);
+        databaseRepo.insertFromLocation(location);
+        databaseRepo.insert5days(location);
     }
 
     private void createLocationRequest() {
         locationRequest = new LocationRequest();
-        locationRequest.setInterval(1000 * 60);
-        locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+        locationRequest.setInterval(1000 * 60 * 15);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
     private void getLastLocation() {
@@ -124,27 +127,5 @@ public class LocationService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
-
-//    private void updateRoom(Location location) {
-//        try {
-//            Log.d(TAG, "loadData: ");
-//            iOpenWeatherMap.getWeatherByLatLng(String.valueOf(location.getLatitude()),
-//                    String.valueOf(location.getLongitude())
-//                    , MainActivity.api_key, "metric").enqueue(new Callback<WeatherResult>() {
-//                @Override
-//                public void onResponse(Call<WeatherResult> call, Response<WeatherResult> response) {
-//                    Log.d(TAG, "onResponse: " + response.body().getName());
-//                    databaseRepo.insert(response.body());
-//                }
-//
-//                @Override
-//                public void onFailure(Call<WeatherResult> call, Throwable t) {
-//                    Log.e(TAG, "onFailure: " + t.toString());
-//                }
-//            });
-//        } catch (Exception e) {
-//            Log.e(TAG, "loadData: Error " + e.toString());
-//        }
-//    }
 
 }

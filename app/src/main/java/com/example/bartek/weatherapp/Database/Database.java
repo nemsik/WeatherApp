@@ -12,7 +12,7 @@ import com.example.bartek.weatherapp.Database.Model.CityHoursWeather;
 import com.example.bartek.weatherapp.Database.Model.CurrentWeather;
 import com.example.bartek.weatherapp.Database.Model.SingleWeather;
 
-@android.arch.persistence.room.Database(entities = {CurrentWeather.class, CityHoursWeather.class, SingleWeather.class}, version = 11)
+@android.arch.persistence.room.Database(entities = {CurrentWeather.class, CityHoursWeather.class, SingleWeather.class}, version = 2)
 public abstract class Database extends RoomDatabase {
 
     private static Database INSTANCE;

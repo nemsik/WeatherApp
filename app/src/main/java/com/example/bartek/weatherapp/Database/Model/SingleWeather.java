@@ -23,11 +23,13 @@ public class SingleWeather {
     private int fiveId;
     private double temp;
     private long dt;
+    private double rain;
 
-    public SingleWeather(int fiveId, double temp, long dt) {
+    public SingleWeather(int fiveId, double temp, long dt, double rain) {
         this.fiveId = fiveId;
         this.temp = temp;
         this.dt = dt;
+        this.rain = rain;
     }
 
     public double getTemp() {
@@ -60,6 +62,14 @@ public class SingleWeather {
 
     public void setDt(long dt) {
         this.dt = dt;
+    }
+
+    public double getRain() {
+        return rain;
+    }
+
+    public void setRain(double rain) {
+        this.rain = rain;
     }
 }
 

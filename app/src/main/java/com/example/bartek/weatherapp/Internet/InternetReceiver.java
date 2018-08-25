@@ -13,11 +13,16 @@ public class InternetReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (isConnected())
-            Log.d("NetReceiver", "Internet is connected");
-        else
-            Log.d("NetReceiver", "Internet is not connected");
         Intent i = new Intent().setAction(intentAction);
+        if (isConnected()){
+            Log.e("NetReceiver", "Internet is connected");
+            i.putExtra(intentAction, true);
+        }
+        else {
+            Log.e("NetReceiver", "Internet is not connected");
+            i.putExtra(intentAction, false);
+        }
+
         context.sendBroadcast(i);
     }
 

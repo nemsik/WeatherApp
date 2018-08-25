@@ -20,6 +20,7 @@ public class CurrentWeather {
     private int visibility;
     private double wind_speed;
     private double wind_deg;
+    private double rain;
     private int clouds;
     private long dt;
     private int sunrise;
@@ -27,7 +28,7 @@ public class CurrentWeather {
     private String country;
     private String city_name;
 
-    public CurrentWeather(int id, String weather_desc, String weather_icon, double temp, double min_temp, double max_temp, float pressure, int humidity, int visibility, double wind_speed, double wind_deg, int clouds, long dt, int sunrise, int sunset, String country, String city_name) {
+    public CurrentWeather(int id, String weather_desc, String weather_icon, double temp, double min_temp, double max_temp, float pressure, int humidity, int visibility, double wind_speed, double wind_deg, double rain, int clouds, long dt, int sunrise, int sunset, String country, String city_name) {
         this.id = id;
         this.weather_desc = weather_desc;
         this.weather_icon = weather_icon;
@@ -39,6 +40,7 @@ public class CurrentWeather {
         this.visibility = visibility;
         this.wind_speed = wind_speed;
         this.wind_deg = wind_deg;
+        this.rain = rain;
         this.clouds = clouds;
         this.dt = dt;
         this.sunrise = sunrise;
@@ -182,5 +184,13 @@ public class CurrentWeather {
 
     public void setCity_name(String city_name) {
         this.city_name = city_name;
+    }
+
+    public double getRain() {
+        return rain;
+    }
+
+    public void setRain(double rain) {
+        this.rain = rain;
     }
 }

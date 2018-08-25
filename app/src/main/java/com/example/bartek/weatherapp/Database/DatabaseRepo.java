@@ -56,6 +56,7 @@ public class DatabaseRepo {
 
         currentWeatherDao = db.currentWeatherDao();
         cityHoursWeatherDao = db.cityHoursWeatherDao();
+
         singleWeatherDao = db.singleWeatherDao();
 
         currentWeatherLiveData = currentWeatherDao.getCurrent();
@@ -78,13 +79,12 @@ public class DatabaseRepo {
 
     public void insertFromLocation(Location location) {
         try {
-            Log.d(TAG, "loadData: ");
             iOpenWeatherMap.getWeatherByLatLng(String.valueOf(location.getLatitude()),
                     String.valueOf(location.getLongitude())
                     , MainActivity.api_key, "metric").enqueue(new Callback<WeatherResult>() {
                 @Override
                 public void onResponse(Call<WeatherResult> call, Response<WeatherResult> response) {
-                    Log.d(TAG, "onResponse: " + response.body().getName());
+                    //Log.d(TAG, "onResponse: " + response.body().getName());
                     insert(response.body());
                 }
 
@@ -100,13 +100,12 @@ public class DatabaseRepo {
 
     public void insert5days(Location location) {
         try {
-            Log.d(TAG, "loadData: 5 days ");
             iOpenWeatherMap.get5DaysWeatherByLatLng(String.valueOf(location.getLatitude()),
                     String.valueOf(location.getLongitude())
                     , MainActivity.api_key, "metric").enqueue(new Callback<Weatherresult5Days>() {
                 @Override
                 public void onResponse(Call<Weatherresult5Days> call, Response<Weatherresult5Days> response) {
-                    Log.d(TAG, "onResponse: " + response.body().getCity().getName());
+                    //Log.d(TAG, "onResponse: " + response.body().getCity().getName());
                     insert5(response.body());
                 }
 
@@ -121,22 +120,27 @@ public class DatabaseRepo {
     }
 
     private void insert5(Weatherresult5Days weatherresult5Days) {
-        CityHoursWeather fiveHoursWeather = new CityHoursWeather(0, weatherresult5Days.getCity().getName()
-                , weatherresult5Days.getCity().getName());
-        new InsertCityAsyncTask(cityHoursWeatherDao).execute(fiveHoursWeather);
-        insertSingle(weatherresult5Days);
-        Log.d(TAG, "insert5: to singe");
+        try {
+            CityHoursWeather fiveHoursWeather = new CityHoursWeather(0, weatherresult5Days.getCity().getName()
+                    , weatherresult5Days.getCity().getName());
+            new InsertCityAsyncTask(cityHoursWeatherDao).execute(fiveHoursWeather);
+            insertSingle(weatherresult5Days);
+        }catch (Exception e){
+            Log.e(TAG, "insert5: error");
+        }
     }
 
     private void insertSingle(Weatherresult5Days weatherresult5Days) {
-        SingleWeather singleWeather;
-        Log.d(TAG, "insertSingle: from single");
-        for (int i = 0; i <= 9; i++) {
-            Log.e(TAG, "insertSingle: !!!! " +i);
-            singleWeather = new SingleWeather(0, weatherresult5Days.getList().get(i).getMain().getTemp(),
-                    weatherresult5Days.getList().get(i).getDt());
-            new InsertSingeAsyncTask(singleWeatherDao).execute(singleWeather);
-        }
+       try {
+           SingleWeather singleWeather;
+           for (int i = 0; i <= 13; i++) {
+               singleWeather = new SingleWeather(0, weatherresult5Days.getList().get(i).getMain().getTemp(),
+                       weatherresult5Days.getList().get(i).getDt(), weatherresult5Days.getList().get(i).getRain().getRain());
+               new InsertSingeAsyncTask(singleWeatherDao).execute(singleWeather);
+           }
+       }catch (Exception e){
+           Log.e(TAG, " insert single err" );
+       }
     }
 
 
@@ -154,6 +158,7 @@ public class DatabaseRepo {
                     weatherResult.getVisibility(),
                     weatherResult.getWind().getSpeed(),
                     weatherResult.getWind().getDeg(),
+                    weatherResult.getRain().getRain(),
                     weatherResult.getClouds().getAll(),
                     weatherResult.getDt(),
                     weatherResult.getSys().getSunrise(),

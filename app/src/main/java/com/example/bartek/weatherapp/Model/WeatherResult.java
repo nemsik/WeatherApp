@@ -1,6 +1,8 @@
 package com.example.bartek.weatherapp.Model;
 
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.List;
 
 
@@ -13,6 +15,8 @@ public class WeatherResult {
     private Main main;
     private int visibility;
     private Wind wind;
+
+    private Rain rain;
     private Clouds clouds;
     private int dt;
     private Sys sys;
@@ -117,5 +121,13 @@ public class WeatherResult {
 
     public void setCod(int cod) {
         this.cod = cod;
+    }
+
+    public Rain getRain() {
+        return rain;
+    }
+
+    public void setRain(Rain rain) {
+        this.rain = rain;
     }
 }

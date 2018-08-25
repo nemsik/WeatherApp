@@ -19,15 +19,22 @@ import android.widget.TextView;
 import com.example.bartek.weatherapp.Database.Model.CityHoursWeather;
 import com.example.bartek.weatherapp.Database.Model.CurrentWeather;
 import com.example.bartek.weatherapp.Database.Model.SingleWeather;
-import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.charts.CombinedChart;
+import com.github.mikephil.charting.components.AxisBase;
+import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
+import com.github.mikephil.charting.data.CombinedData;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
+import com.github.mikephil.charting.highlight.Highlight;
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.squareup.picasso.Picasso;
 
 import java.text.SimpleDateFormat;
@@ -52,11 +59,8 @@ public class TodayWeatherFragment extends Fragment implements Observer<CurrentWe
     TextView textview_temperature;
     @BindView(R.id.textview_description)
     TextView textview_description;
-
-    //@BindView(R.id.weather_panel) LinearLayout weather_panel;
     @BindView(R.id.progressBar)
     ProgressBar progressBar;
-
     @BindView(R.id.textview_humidity)
     TextView textview_humidity;
     @BindView(R.id.textview_sunrise)
@@ -65,18 +69,20 @@ public class TodayWeatherFragment extends Fragment implements Observer<CurrentWe
     TextView textview_sunset;
     @BindView(R.id.textview_pressure)
     TextView textview_pressure;
-    //@BindView(R.id.textview_date_time) TextView textview_date_time;
     @BindView(R.id.textview_wind)
     TextView textview_wind;
+    @BindView(R.id.textviewRain)
+    TextView textviewRain;
     @BindView(R.id.lineChart)
-    LineChart lineChart;
+    CombinedChart mChart;
 
     static TodayWeatherFragment instance;
     private ViewModel viewModel;
 
     private String TAG = "fragment";
 
-    private ArrayList<Entry> entries;
+    private ArrayList<Entry> entriesTemp;
+    private ArrayList<BarEntry> entriesRain;
 
     private String[] text;
 
@@ -95,11 +101,23 @@ public class TodayWeatherFragment extends Fragment implements Observer<CurrentWe
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        Log.d(TAG, "onCreateView: ");
+        //Log.d(TAG, "onCreateView: ");
         View view = inflater.inflate(R.layout.fragment_today_weather, container, false);
         ButterKnife.bind(this, view);
 
-        entries = new ArrayList<>();
+        progressBar.setVisibility(View.VISIBLE);
+        textview_city_name.setVisibility(View.INVISIBLE);
+        textview_description.setVisibility(View.INVISIBLE);
+        textview_temperature.setVisibility(View.INVISIBLE);
+        textview_wind.setVisibility(View.INVISIBLE);
+        textview_pressure.setVisibility(View.INVISIBLE);
+        textview_humidity.setVisibility(View.INVISIBLE);
+        textview_sunrise.setVisibility(View.INVISIBLE);
+        textview_sunset.setVisibility(View.INVISIBLE);
+        textviewRain.setVisibility(View.INVISIBLE);
+
+        entriesTemp = new ArrayList<>();
+        entriesRain = new ArrayList<>();
 
         text = new String[9];
 
@@ -109,16 +127,17 @@ public class TodayWeatherFragment extends Fragment implements Observer<CurrentWe
             @Override
             public void onChanged(@Nullable List<SingleWeather> singleWeathers) {
                 if (singleWeathers != null) {
-                    Log.d(TAG, "onChanged: SINGLE");
-                    Log.e(TAG, "sizse SINGLE" + singleWeathers.size());
-                    entries.clear();
+                    Log.e(TAG, "onChanged: SINGLE");
+                    //Log.e(TAG, "sizse SINGLE" + singleWeathers.size());
                     if (singleWeathers.size() == 10) {
-                        for (int i = 0; i < singleWeathers.size() - 1; i++) {
-                            Log.e(TAG, "SINGLE " + singleWeathers.get(i).getTemp() + "DATE " + dateConv(singleWeathers.get(i).getDt()));
-                            entries.add(new Entry(i, (float) singleWeathers.get(i).getTemp()));
+                        entriesTemp.clear();
+                        entriesRain.clear();
+                        for (int i = 0; i < 9; i++) {
+                            entriesTemp.add(new Entry(i, (float) singleWeathers.get(i).getTemp()));
+                            entriesRain.add(new BarEntry(i, (float) singleWeathers.get(i).getRain()));
                             text[i] = dateConv(singleWeathers.get(i).getDt());
                         }
-                        updateChart(entries);
+                        updateChart(entriesTemp, entriesRain);
                         Log.d(TAG, "size " + text.length);
                         for (int i = 0; i < text.length; i++) {
                             Log.d(TAG, " " + text[i]);
@@ -128,12 +147,6 @@ public class TodayWeatherFragment extends Fragment implements Observer<CurrentWe
             }
         });
 
-        viewModel.getCityHoursWeatherLiveData().observe(this, new Observer<CityHoursWeather>() {
-            @Override
-            public void onChanged(@Nullable CityHoursWeather cityHoursWeather) {
-                if (cityHoursWeather != null) Log.e(TAG, "FRAGMENT " + cityHoursWeather.getId());
-            }
-        });
         return view;
     }
 
@@ -156,6 +169,7 @@ public class TodayWeatherFragment extends Fragment implements Observer<CurrentWe
             textview_humidity.setVisibility(View.INVISIBLE);
             textview_sunrise.setVisibility(View.INVISIBLE);
             textview_sunset.setVisibility(View.INVISIBLE);
+            textviewRain.setVisibility(View.INVISIBLE);
 
             textview_city_name.setText(data.getCity_name() + ", " + data.getCountry());
             textview_description.setText(data.getWeather_desc());
@@ -165,6 +179,7 @@ public class TodayWeatherFragment extends Fragment implements Observer<CurrentWe
             textview_humidity.setText("humidity: " + String.valueOf(data.getHumidity()) + " %");
             textview_sunrise.setText("sunrise: " + String.valueOf(dateConv(data.getSunrise())));
             textview_sunset.setText("sunset: " + String.valueOf(dateConv(data.getSunset())));
+            textviewRain.setText("precipitation: " + String.valueOf(data.getRain()) +" mm");
 
             String path = "https://openweathermap.org/img/w/" + data.getWeather_icon().toString() + ".png";
             Picasso.get().load(path).into(img_weather);
@@ -178,56 +193,111 @@ public class TodayWeatherFragment extends Fragment implements Observer<CurrentWe
             textview_humidity.setVisibility(View.VISIBLE);
             textview_sunrise.setVisibility(View.VISIBLE);
             textview_sunset.setVisibility(View.VISIBLE);
+            textviewRain.setVisibility(View.VISIBLE);
 
             progressBar.setVisibility(View.INVISIBLE);
         } catch (Exception e) {
         }
     }
 
-    private void updateChart(ArrayList<Entry> entries) {
-        LineDataSet dataset = new LineDataSet(entries, "Temperature");
-        dataset.setMode(LineDataSet.Mode.CUBIC_BEZIER);
-        dataset.setCubicIntensity(0.15f);
-        dataset.setLineWidth(4.8f);
-        dataset.setColor(Color.BLUE);
-        dataset.setDrawValues(true);
-        XAxis xAxis = lineChart.getXAxis();
+    private void updateChart(ArrayList<Entry> entriesTemp, ArrayList<BarEntry> entriesRain) {
 
-        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        mChart.getDescription().setEnabled(false);
+        mChart.setBackgroundColor(Color.WHITE);
+        mChart.setDrawGridBackground(false);
+        mChart.setDrawBarShadow(false);
+        mChart.setHighlightFullBarEnabled(false);
+
+        mChart.setDrawOrder(new CombinedChart.DrawOrder[]{
+                CombinedChart.DrawOrder.BAR, CombinedChart.DrawOrder.LINE
+        });
+
+        Legend l = mChart.getLegend();
+        l.setWordWrapEnabled(true);
+        l.setVerticalAlignment(Legend.LegendVerticalAlignment.BOTTOM);
+        l.setHorizontalAlignment(Legend.LegendHorizontalAlignment.CENTER);
+        l.setOrientation(Legend.LegendOrientation.HORIZONTAL);
+        l.setDrawInside(false);
+
+        YAxis leftAxis = mChart.getAxisLeft();
+        leftAxis.setValueFormatter(new IAxisValueFormatter() {
+            @Override
+            public String getFormattedValue(float value, AxisBase axis) {
+                return (int)value + "°C";
+            }
+        });
+        leftAxis.setTextColor(Color.BLUE);
+        leftAxis.setDrawGridLines(false);
+
+        YAxis rightAxis = mChart.getAxisRight();
+        rightAxis.setValueFormatter(new IAxisValueFormatter() {
+            @Override
+            public String getFormattedValue(float value, AxisBase axis) {
+
+                return (int)value +"mm";
+            }
+        });
+        rightAxis.setTextColor(Color.GRAY);
+        rightAxis.setDrawGridLines(false);
+
+
+
+        XAxis xAxis = mChart.getXAxis();
+
+        xAxis.setPosition(XAxis.XAxisPosition.BOTH_SIDED);
+
+
         xAxis.setValueFormatter(new IndexAxisValueFormatter(text));
-        dataset.notifyDataSetChanged();
-        lineChart.getAxisLeft().setDrawLabels(false);
-        lineChart.getAxisRight().setDrawLabels(false);
-        lineChart.getXAxis().setDrawLabels(true);
-        lineChart.getLegend().setEnabled(true);
 
-        ArrayList<BarEntry> barEntries = new ArrayList<>();
-        barEntries.add(new BarEntry(4f, 0));
-        barEntries.add(new BarEntry(6f, 0));
-        barEntries.add(new BarEntry(4f, 0));
-        barEntries.add(new BarEntry(2f, 0));
-        barEntries.add(new BarEntry(4f, 0));
-        barEntries.add(new BarEntry(6f, 0));
-        barEntries.add(new BarEntry(2f, 0));
-        barEntries.add(new BarEntry(8f, 0));
-        barEntries.add(new BarEntry(1f, 0));
-        BarDataSet barDataSet = new BarDataSet(barEntries, "elo");
+        CombinedData combinedData = new CombinedData();
 
-        LineData lineData = new LineData(dataset);
-        lineChart.setData(lineData);
+        LineDataSet lineDataset = new LineDataSet(entriesTemp, "Temperature");
+        lineDataset.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+        lineDataset.setCubicIntensity(0.15f);
+        lineDataset.setLineWidth(4.8f);
+        lineDataset.setColor(Color.BLUE);
+        lineDataset.setDrawValues(false);
+        lineDataset.setAxisDependency(YAxis.AxisDependency.LEFT);
 
-        lineChart.setScaleEnabled(false);
-        lineChart.notifyDataSetChanged();
-        lineChart.invalidate();
+        BarDataSet barDataSet = new BarDataSet(entriesRain, "Precipitation");
+        barDataSet.setDrawValues(false);
+        barDataSet.setColor(Color.GRAY);
+        barDataSet.setAxisDependency(YAxis.AxisDependency.RIGHT);
+
+
+        LineData lineData = new LineData(lineDataset);
+        BarData barData = new BarData(barDataSet);
+
+
+        combinedData.setData(lineData);
+        combinedData.setData(barData);
+
+        leftAxis.setAxisMaximum(combinedData.getYMax() + 1.5f);
+        leftAxis.setAxisMinimum(lineData.getYMin() - 1.5f);
+
+        mChart.setData(combinedData);
+        mChart.setScaleEnabled(false);
+
+        mChart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
+            @Override
+            public void onValueSelected(Entry e, Highlight h) {
+                Log.d(TAG, "onValueSelected: " + e.toString());
+            }
+
+            @Override
+            public void onNothingSelected() {
+
+            }
+        });
+
+        mChart.notifyDataSetChanged();
+        mChart.invalidate();
     }
 
     @Override
     public void onChanged(@Nullable CurrentWeather currentWeather) {
         if (currentWeather != null) {
-//            Log.d(TAG, "onChanged: observer" + currentWeatherModel.getCity_name());
-//            Log.d(TAG, "onChanged: observer" + currentWeatherModel.getMax_temp());
-//            Log.d(TAG, "onChanged: observer" + currentWeatherModel.getMin_temp());
-            Log.e(TAG, "CURRENT ID" + currentWeather.getId());
+            Log.d(TAG, "CURRENT ID" + currentWeather.getId());
             setWeatherInformation(currentWeather);
         }
     }

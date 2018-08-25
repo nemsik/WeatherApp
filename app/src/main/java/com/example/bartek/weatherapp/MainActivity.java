@@ -49,11 +49,6 @@ public class MainActivity extends AppCompatActivity {
     private ViewPager viewPager;
     private CoordinatorLayout coordinatorLayout;
 
-    private FusedLocationProviderClient fusedLocationProviderClient;
-    private LocationCallback locationCallback;
-    private Location location;
-    private LocationRequest locationRequest;
-    private DatabaseRepo databaseRepo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,17 +61,7 @@ public class MainActivity extends AppCompatActivity {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        databaseRepo = DatabaseRepo.getInstance(getApplication());
-
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-        locationCallback = new LocationCallback() {
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                super.onLocationResult(locationResult);
-                onNewLocation(locationResult.getLastLocation());
-            }
-        };
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);;
 
         Dexter.withActivity(this).withPermissions(Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.ACCESS_FINE_LOCATION).withListener(new MultiplePermissionsListener() {
@@ -87,22 +72,15 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
                 startLocationService();
-                createLocationRequest();
-                getLastLocation();
-                requestLocationUpdates();
-                setupViewPager(viewPager);
             }
 
             @Override
             public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {
                 Snackbar.make(coordinatorLayout, "Permission Denied", Snackbar.LENGTH_LONG).show();
-                if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                        && ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    return;
-                }
             }
         }).check();
 
+        setupViewPager(viewPager);
     }
 
     private void setupViewPager(ViewPager viewPager) {
@@ -117,44 +95,4 @@ public class MainActivity extends AppCompatActivity {
     private void startLocationService(){
         startService(new Intent(this, LocationService.class));
     }
-
-    private void createLocationRequest() {
-        locationRequest = new LocationRequest();
-        locationRequest.setInterval(1000 * 30);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-    }
-
-    private void getLastLocation() {
-        try {
-            fusedLocationProviderClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
-                @Override
-                public void onComplete(@NonNull Task<Location> task) {
-                    if (task.isSuccessful() && task.getResult() != null) {
-                        location = task.getResult();
-                        Log.d(TAG, "onComplete: " + location.toString());
-                    } else Log.i(TAG, "Failed to get location");
-                }
-            });
-        } catch (SecurityException securityException) {
-            Log.i(TAG, "Lost location permission " + securityException);
-        }
-    }
-
-    private void requestLocationUpdates() {
-        Log.d(TAG, "request location updates");
-        try {
-            fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
-        } catch (SecurityException securityException) {
-            Log.i(TAG, "Lost location permission. Could not request updates. " + securityException);
-        }
-    }
-
-    private void onNewLocation(Location location) {
-        Log.d(TAG, "NewLocation: " + location);
-        //updateRoom(location);
-        databaseRepo.insertFromLocation(location);
-        databaseRepo.insert5days(location);
-    }
-
-
 }
