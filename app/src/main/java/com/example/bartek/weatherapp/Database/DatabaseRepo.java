@@ -23,10 +23,12 @@ import com.example.bartek.weatherapp.Retrofit.RetrofitClient;
 
 import java.util.List;
 
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
+
 
 public class DatabaseRepo {
     private String TAG = "DatabaseRepo";
@@ -84,7 +86,7 @@ public class DatabaseRepo {
                     , MainActivity.api_key, "metric").enqueue(new Callback<WeatherResult>() {
                 @Override
                 public void onResponse(Call<WeatherResult> call, Response<WeatherResult> response) {
-                    //Log.d(TAG, "onResponse: " + response.body().getName());
+                    Log.d(TAG, "onResponse current: " + response.body().getName());
                     insert(response.body());
                 }
 
@@ -125,22 +127,26 @@ public class DatabaseRepo {
                     , weatherresult5Days.getCity().getName());
             new InsertCityAsyncTask(cityHoursWeatherDao).execute(fiveHoursWeather);
             insertSingle(weatherresult5Days);
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.e(TAG, "insert5: error");
         }
     }
 
     private void insertSingle(Weatherresult5Days weatherresult5Days) {
-       try {
-           SingleWeather singleWeather;
-           for (int i = 0; i <= 13; i++) {
-               singleWeather = new SingleWeather(0, weatherresult5Days.getList().get(i).getMain().getTemp(),
-                       weatherresult5Days.getList().get(i).getDt(), weatherresult5Days.getList().get(i).getRain().getRain());
-               new InsertSingeAsyncTask(singleWeatherDao).execute(singleWeather);
-           }
-       }catch (Exception e){
-           Log.e(TAG, " insert single err" );
-       }
+
+        SingleWeather singleWeather;
+        for (int i = 0; i <= 13; i++) {
+            try{
+                singleWeather = new SingleWeather(0, weatherresult5Days.getList().get(i).getMain().getTemp(),
+                        weatherresult5Days.getList().get(i).getDt(), weatherresult5Days.getList().get(i).getRain().getRain());
+                new InsertSingeAsyncTask(singleWeatherDao).execute(singleWeather);
+            }catch (Exception e){
+                singleWeather = new SingleWeather(0, weatherresult5Days.getList().get(i).getMain().getTemp(),
+                        weatherresult5Days.getList().get(i).getDt(), 0);
+                new InsertSingeAsyncTask(singleWeatherDao).execute(singleWeather);
+            }
+
+        }
     }
 
 
@@ -167,6 +173,26 @@ public class DatabaseRepo {
                     weatherResult.getName());
             new InsertCurrentAsynctask(currentWeatherDao).execute(currentWeather);
         } catch (Exception e) {
+            CurrentWeather currentWeather = new CurrentWeather(
+                    0,
+                    weatherResult.getWeather().get(0).getDescription(),
+                    weatherResult.getWeather().get(0).getIcon(),
+                    weatherResult.getMain().getTemp(),
+                    weatherResult.getMain().getTemp_min(),
+                    weatherResult.getMain().getTemp_max(),
+                    weatherResult.getMain().getPressure(),
+                    weatherResult.getMain().getHumidity(),
+                    weatherResult.getVisibility(),
+                    weatherResult.getWind().getSpeed(),
+                    weatherResult.getWind().getDeg(),
+                    0,
+                    weatherResult.getClouds().getAll(),
+                    weatherResult.getDt(),
+                    weatherResult.getSys().getSunrise(),
+                    weatherResult.getSys().getSunset(),
+                    weatherResult.getSys().getCountry(),
+                    weatherResult.getName());
+            new InsertCurrentAsynctask(currentWeatherDao).execute(currentWeather);
             Log.i(TAG, "insert err" + e.toString());
         }
     }

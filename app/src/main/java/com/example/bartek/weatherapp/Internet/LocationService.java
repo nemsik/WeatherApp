@@ -86,7 +86,7 @@ public class LocationService extends Service {
 
     private void createLocationRequest() {
         locationRequest = new LocationRequest();
-        locationRequest.setInterval(1000 * 60 * 15);
+        locationRequest.setInterval(1000 * 60 * 1);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
